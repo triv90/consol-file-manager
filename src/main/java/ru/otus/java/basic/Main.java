@@ -11,49 +11,49 @@ import java.nio.file.StandardCopyOption;
 
 public class Main {
     static Integer findResult = 0;
-    public static void main(String[] args) throws IOException {
-        Directory directory = new Directory(getCurrentDir());
+    public static void main(String[] args) {
+        Path path = getCurrentDir();
         String strEmpty = "";
         String[] commands;
-        print(directory);
+        print(path);
         while (true) {
             strEmpty = inputString();
             commands = strEmpty.split(" ");
             if (commands[0].equals("ls")) {
                 if (commands.length == 2) {
-                    commandLs(directory, commands[1]);
+                    commandLs(path, commands[1]);
                 } else if (commands.length == 1) {
-                    commandLs(directory);
+                    commandLs(path);
                 }
-                print(directory);
+                print(path);
             } else if (commands[0].equals("cd")) {
-                directory.setDirectory(commandCd(directory, commands[1]));
-                print(directory);
+                path = commandCd(path, commands[1]);
+                print(path);
             } else if (commands[0].equals("mkdir")) {
-                commandMkDir(directory, commands[1]);
-                print(directory);
+                commandMkDir(path, commands[1]);
+                print(path);
             } else if (commands[0].equals("rm")) {
                 commandRm(commands[1]);
-                print(directory);
+                print(path);
             } else if (commands[0].equals("cp")) {
                 if (commands.length == 3) {
                     commandCp(commands[1], commands[2]);
                 } else if (commands.length == 4) {
                     commandCp(commands[1], commands[2], commands[2]);
                 }
-                print(directory);
+                print(path);
             } else if (commands[0].equals("mv")) {
                 if (commands.length == 3) {
                     commandMv(commands[1], commands[2]);
                 } else if (commands.length == 4) {
                     commandMv(commands[1], commands[2], commands[3]);
                 }
-                print(directory);
+                print(path);
             } else if (commands[0].equals("finfo")) {
-                commandFinfo(directory, commands[1]);
-                print(directory);
+                commandFinfo(path, commands[1]);
+                print(path);
             } else if (commands[0].equals("find")) {
-                String beginPath = String.valueOf(directory.getDirectory());
+                String beginPath = String.valueOf(path);
                 File searchFile;
                 Integer root = 0;
                 findResult = 0;
@@ -68,18 +68,18 @@ public class Main {
                 } else {
                     System.out.println("Найдено файлов: " + findResult);
                 }
-                print(directory);
+                print(path);
             } else if (commands[0].equals("help")) {
                 Path helpPath = Paths.get(getCurrentDir().toString(), "src", "main", "resources", "help.txt");
                 printFile(String.valueOf(helpPath));
-                print(directory);
+                print(path);
             } else if (Arrays.asList("exit").contains(commands[0])) {
                 break;
             } else if (strEmpty.equals("")) {
-                System.out.print(directory.getDirectory() + ":");
+                System.out.print(path + ":");
             } else {
                 System.out.println("Неизвестная команда");
-                print(directory);
+                print(path);
             }
         }
     }
@@ -100,12 +100,12 @@ public class Main {
         return findResult;
     }
 
-    public static void commandFinfo(Directory directory, String fileName) {
+    public static void commandFinfo(Path path, String fileName) {
         try {
             File file = new File(fileName);
-            Path path = Paths.get(String.valueOf(directory.getDirectory()), fileName);
+            Path fullPath = Paths.get(String.valueOf(path), fileName);
             BasicFileAttributes attr;
-            attr = Files.readAttributes(path, BasicFileAttributes.class);
+            attr = Files.readAttributes(fullPath, BasicFileAttributes.class);
             System.out.println("   Путь: " + file.getParent());
             System.out.println("   Размер: " + file.length() + " байт");
             System.out.println("   Создан: " + attr.creationTime());
@@ -118,18 +118,18 @@ public class Main {
         }
     }
 
-    public static Path commandCd(Directory directory, String command) {
+    public static Path commandCd(Path path, String command) {
         if (command.equals("..")) {
             try {
-                if (Files.exists(directory.getDirectory().getParent())) {
-                    return directory.getDirectory().getParent();
+                if (Files.exists(path.getParent())) {
+                    return path.getParent();
                 }
             } catch (NullPointerException e) {
-                return directory.getDirectory();
+                return path;
             }
         } else {
             try {
-                command = String.valueOf(Paths.get(String.valueOf(directory.getDirectory()), command));
+                command = String.valueOf(Paths.get(String.valueOf(path), command));
                 if (Files.exists(Path.of(command))) {
                     return Path.of(command);
                 }
@@ -137,11 +137,11 @@ public class Main {
                 System.out.println("Неверный путь");
             }
         }
-        return directory.getDirectory();
+        return path;
     }
 
-    public static void commandMkDir(Directory directory, String newFolder) {
-        String currentPath = String.valueOf(directory.getDirectory());
+    public static void commandMkDir(Path path, String newFolder) {
+        String currentPath = String.valueOf(path);
         final File newDirectory = new File(currentPath, newFolder);
         if (!newDirectory.exists()) {
             newDirectory.mkdir();
@@ -149,15 +149,15 @@ public class Main {
     }
 
     public static void commandRm(String deleteObject) {
-        final File deleteDirectory = new File(deleteObject);
-        if (deleteDirectory.exists()) {
-            deleteDirectory.delete();
+        final File delete = new File(deleteObject);
+        if (delete.exists()) {
+            delete.delete();
         }
     }
     
-    public static void commandLs(Directory directory, String param) {
+    public static void commandLs(Path path, String param) {
         if (param.equals("-i")) {
-            String currentPath = String.valueOf(directory.getDirectory());
+            String currentPath = String.valueOf(path);
             File dir = new File(currentPath);
             for (File file : dir.listFiles()) {
                 System.out.println(file.getName() + " " +
@@ -166,17 +166,17 @@ public class Main {
         }
     }
 
-    public static void commandLs(Directory directory) {
-        String currentPath = String.valueOf(directory.getDirectory());
+    public static void commandLs(Path path) {
+        String currentPath = String.valueOf(path);
         File dir = new File(currentPath);
         for (File file : dir.listFiles()) {
             System.out.println(file.getName());
         }
     }
 
-    private static void print(Directory directory) {
+    private static void print(Path dir) {
         System.out.println("");
-        System.out.print(directory.getDirectory()+":");
+        System.out.print(dir +":");
     }
 
     public static void commandCp(String source, String destination) {
@@ -189,7 +189,7 @@ public class Main {
         } catch (NoSuchFileException e) {
             System.out.println("Файл не найден");
         } catch (IOException e) {
-            System.out.println("Ошибка ввода/вывода");
+            System.out.println("Ошибка обработки");
         }
     }
 
@@ -203,7 +203,7 @@ public class Main {
             } catch (NoSuchFileException e) {
                 System.out.println("Файл не найден");
             } catch (IOException e) {
-                System.out.println("Ошибка ввода/вывода");
+                System.out.println("Ошибка обработки");
             }
         }
     }
@@ -214,11 +214,11 @@ public class Main {
         try {
             Path bytes = Files.move(fileSource.toPath(), fileDestination.toPath());
         } catch (FileAlreadyExistsException e) {
-            System.out.println("Не могу выполнить, файл уже существует");
+            System.out.println("Файл уже существует");
         } catch (NoSuchFileException e) {
             System.out.println("Файл не найден");
         } catch (IOException e) {
-            System.out.println("Ошибка ввода/вывода");
+            System.out.println("Ошибка обработки");
         }
     }
 
@@ -231,7 +231,7 @@ public class Main {
             } catch (NoSuchFileException e) {
                 System.out.println("Файл не найден");
             } catch (IOException e) {
-                System.out.println("Ошибка ввода/вывода");
+                System.out.println("Ошибка обработки");
             }
         }
     }
